@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, deleteDoc, doc, setDoc } from 'firebase/firestore';
 import { config } from 'dotenv';
 
 // Load environment variables
@@ -18,7 +18,15 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-async function importStats() {
+async function resetDatabase() {
+  // Delete all documents in the 'games' collection
+  const gamesCollection = collection(db, 'games');
+  const gamesSnapshot = await getDocs(gamesCollection);
+  const deletePromises = gamesSnapshot.docs.map(doc => deleteDoc(doc.ref));
+  await Promise.all(deletePromises);
+  console.log('All games deleted');
+
+  // Create the new aggregate stats document
   const stats = {
     Antoine: { totalGames: 249, totalWins: 77, totalSecondPlace: 81 },
     'Don Jon': { totalGames: 204, totalWins: 45, totalSecondPlace: 66 },
@@ -31,12 +39,8 @@ async function importStats() {
     Nick: { totalGames: 91, totalWins: 26, totalSecondPlace: 29 }
   };
 
-  try {
-    await setDoc(doc(db, 'stats', 'aggregate'), { players: stats });
-    console.log('Aggregate stats imported successfully');
-  } catch (error) {
-    console.error('Error importing aggregate stats:', error);
-  }
+  await setDoc(doc(db, 'stats', 'aggregate'), { players: stats });
+  console.log('Aggregate stats created');
 }
 
-importStats().catch(console.error);
+resetDatabase().catch(console.error);

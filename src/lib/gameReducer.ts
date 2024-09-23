@@ -11,14 +11,14 @@ function calculateStats(games: Game[]): Stats {
   games.forEach(game => {
     game.players.forEach(player => {
       if (!stats[player]) {
-        stats[player] = { wins: 0, secondPlace: 0, participations: 0 }
+        stats[player] = { totalGames: 0, totalWins: 0, totalSecondPlace: 0 }
       }
-      stats[player].participations++
+      stats[player].totalGames++
       if (player === game.winner) {
-        stats[player].wins++
+        stats[player].totalWins++
       }
       if (game.secondPlaces.includes(player)) {
-        stats[player].secondPlace++
+        stats[player].totalSecondPlace++
       }
     })
   })

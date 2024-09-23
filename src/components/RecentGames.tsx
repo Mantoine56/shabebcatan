@@ -1,79 +1,49 @@
-import { useState } from 'react'
 import { Game } from '@/lib/types'
-import EditGame from './EditGame'
 
-interface RecentGamesProps {
+type RecentGamesProps = {
   games: Game[]
-  editGame: (id: string, updatedGame: Partial<Omit<Game, 'id'>>) => Promise<void>
-  removeGame: (id: string) => Promise<void>
+  deleteGame: (gameId: string) => Promise<void>
 }
 
-export default function RecentGames({ games, editGame, removeGame }: RecentGamesProps) {
-  const [editingGame, setEditingGame] = useState<Game | null>(null)
+export default function RecentGames({ games, deleteGame }: RecentGamesProps) {
+  const handleDelete = async (gameId: string) => {
+    if (window.confirm('Are you sure you want to delete this game?')) {
+      await deleteGame(gameId)
+    }
+  }
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Recent Games</h3>
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Winner</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Second Place</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Players</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {games.slice(0, 20).map((game) => (
-              <tr key={game.id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {new Date(game.date).toLocaleDateString()}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
-                  {game.winner}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">
-                  {game.secondPlaces.join(', ')}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {game.players.join(', ')}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+    <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+      <div className="px-4 py-5 sm:px-6">
+        <h3 className="text-lg leading-6 font-medium text-gray-900">Recent Games</h3>
+      </div>
+      <div className="border-t border-gray-200">
+        <ul className="divide-y divide-gray-200">
+          {games.map((game) => (
+            <li key={game.id} className="px-4 py-4 sm:px-6">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-gray-900">
+                  Winner: {game.winner} | Date: {new Date(game.date).toLocaleDateString()}
+                </p>
+                <div>
                   <button
-                    onClick={() => setEditingGame(game)}
-                    className="text-indigo-600 hover:text-indigo-900 mr-4"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (window.confirm('Are you sure you want to delete this game?')) {
-                        removeGame(game.id)
-                      }
-                    }}
+                    onClick={() => handleDelete(game.id)}
                     className="text-red-600 hover:text-red-900"
                   >
                     Delete
                   </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                </div>
+              </div>
+              <p className="mt-1 text-sm text-gray-500">
+                Players: {game.players.join(', ')}
+              </p>
+              <p className="mt-1 text-sm text-gray-500">
+                Second Places: {game.secondPlaces.join(', ')}
+              </p>
+            </li>
+          ))}
+        </ul>
       </div>
-      {editingGame && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <EditGame
-              game={editingGame}
-              editGame={editGame}
-              onClose={() => setEditingGame(null)}
-            />
-          </div>
-        </div>
-      )}
     </div>
   )
 }

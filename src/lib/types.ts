@@ -9,9 +9,9 @@ export interface Game {
 }
 
 export interface PlayerStats {
-  wins: number
-  secondPlace: number
-  participations: number
+  totalGames: number
+  totalWins: number
+  totalSecondPlace: number
 }
 
 export interface Stats {

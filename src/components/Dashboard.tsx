@@ -1,67 +1,45 @@
 import { useMemo } from 'react'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import ChartCard from './ChartCard'
 import RecentGames from './RecentGames'
-import { Game, Stats } from '@/lib/types'
+import { Stats, Game } from '@/lib/types'
 
-interface DashboardProps {
-  games: Game[]
+type DashboardProps = {
   stats: Stats
-  editGame: (id: string, updatedGame: Partial<Omit<Game, 'id'>>) => Promise<void>
-  removeGame: (id: string) => Promise<void>
+  recentGames: Game[]
+  deleteGame: (gameId: string) => Promise<void>
 }
 
-export default function Dashboard({ games, stats, editGame, removeGame }: DashboardProps) {
+export default function Dashboard({ stats, recentGames, deleteGame }: DashboardProps) {
   const winPercentageData = useMemo(() => {
     return Object.entries(stats).map(([player, playerStats]) => ({
       name: player,
-      percentage: playerStats.participations > 0 ? (playerStats.wins / playerStats.participations) * 100 : 0
+      percentage: playerStats.totalGames > 0 ? (playerStats.totalWins / playerStats.totalGames) * 100 : 0
     })).sort((a, b) => b.percentage - a.percentage).slice(0, 5)
   }, [stats])
 
-  const secondPlaceData = useMemo(() => {
+  const secondPlacePercentageData = useMemo(() => {
     return Object.entries(stats).map(([player, playerStats]) => ({
       name: player,
-      secondPlace: playerStats.secondPlace
-    })).sort((a, b) => b.secondPlace - a.secondPlace).slice(0, 5)
+      percentage: playerStats.totalGames > 0 ? (playerStats.totalSecondPlace / playerStats.totalGames) * 100 : 0
+    })).sort((a, b) => b.percentage - a.percentage).slice(0, 5)
   }, [stats])
 
   const mostGamesPlayedData = useMemo(() => {
     return Object.entries(stats).map(([player, playerStats]) => ({
       name: player,
-      gamesPlayed: playerStats.participations
+      gamesPlayed: playerStats.totalGames
     })).sort((a, b) => b.gamesPlayed - a.gamesPlayed).slice(0, 5)
   }, [stats])
 
-  const last10GamesWinPercentageData = useMemo(() => {
-    const last10Games = games.slice(-10)
-    const playerWins: { [key: string]: number } = {}
-    const playerParticipations: { [key: string]: number } = {}
-
-    last10Games.forEach(game => {
-      game.players.forEach(player => {
-        playerParticipations[player] = (playerParticipations[player] || 0) + 1
-        if (player === game.winner) {
-          playerWins[player] = (playerWins[player] || 0) + 1
-        }
-      })
-    })
-
-    return Object.entries(playerParticipations).map(([player, participations]) => ({
-      name: player,
-      percentage: (playerWins[player] || 0) / participations * 100
-    })).sort((a, b) => b.percentage - a.percentage).slice(0, 5)
-  }, [games])
-
   return (
-    <div className="space-y-8">
-      <h2 className="text-2xl font-semibold">Dashboard</h2>
-      <div className="grid gap-6 md:grid-cols-2">
-        <ChartCard title="Highest Win Percentage" data={winPercentageData} dataKey="percentage" />
-        <ChartCard title="Most 2nd Place Finishes" data={secondPlaceData} dataKey="secondPlace" />
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <ChartCard title="Top 5 Win Percentages" data={winPercentageData} dataKey="percentage" />
+        <ChartCard title="Top 5 Second Place Percentages" data={secondPlacePercentageData} dataKey="percentage" />
         <ChartCard title="Most Games Played" data={mostGamesPlayedData} dataKey="gamesPlayed" />
-        <ChartCard title="Best Win % (Last 10 Games)" data={last10GamesWinPercentageData} dataKey="percentage" />
       </div>
-      <RecentGames games={games} editGame={editGame} removeGame={removeGame} />
+      <RecentGames games={recentGames} deleteGame={deleteGame} />
     </div>
   )
 }

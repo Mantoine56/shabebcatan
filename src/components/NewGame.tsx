@@ -1,7 +1,11 @@
 import { useState } from 'react'
-import { Player, Game } from '@/lib/types'
+import { Player } from '@/lib/types'
 
-export default function NewGame({ addGame }: { addGame: (game: Omit<Game, 'id'>) => Promise<void> }) {
+type NewGameProps = {
+  addGame: (winner: Player, secondPlaces: Player[], players: Player[]) => Promise<void>
+}
+
+export default function NewGame({ addGame }: NewGameProps) {
   const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([])
   const [winner, setWinner] = useState<Player | null>(null)
   const [secondPlaces, setSecondPlaces] = useState<Player[]>([])
@@ -12,16 +16,11 @@ export default function NewGame({ addGame }: { addGame: (game: Omit<Game, 'id'>)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (selectedPlayers.length >= 3 && selectedPlayers.length <= 6 && winner && secondPlaces.length > 0) {
+    if (selectedPlayers.length >= 3 && selectedPlayers.length <= 6 && winner) {
       setIsSubmitting(true)
       setSubmitMessage('')
       try {
-        await addGame({
-          date: new Date().toISOString(),
-          players: selectedPlayers,
-          winner,
-          secondPlaces,
-        })
+        await addGame(winner, secondPlaces, selectedPlayers)
         setSubmitMessage('Game added successfully!')
         setSelectedPlayers([])
         setWinner(null)

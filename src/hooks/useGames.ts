@@ -1,53 +1,83 @@
-import { useEffect, useReducer } from 'react'
-import { collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, updateDoc } from 'firebase/firestore'
+import { useEffect, useState } from 'react'
+import { doc, getDoc, updateDoc, collection, addDoc, query, orderBy, limit, getDocs, deleteDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import { gameReducer, initialState } from '@/lib/gameReducer'
-import { Game } from '@/lib/types'
+import { Stats, Player, Game } from '@/lib/types'
 
 export default function useGames() {
-  const [state, dispatch] = useReducer(gameReducer, initialState)
+  const [stats, setStats] = useState<Stats>({})
+  const [recentGames, setRecentGames] = useState<Game[]>([])
 
   useEffect(() => {
-    const gamesQuery = query(collection(db, 'games'), orderBy('date', 'desc'))
-    const unsubscribe = onSnapshot(gamesQuery, (snapshot) => {
-      const games = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Game))
-      dispatch({ type: 'SET_GAMES', payload: games })
-    })
+    const fetchStats = async () => {
+      const docRef = doc(db, 'stats', 'aggregate')
+      const docSnap = await getDoc(docRef)
+      if (docSnap.exists()) {
+        setStats(docSnap.data().players)
+      }
+    }
 
-    return () => unsubscribe()
+    const fetchRecentGames = async () => {
+      const gamesRef = collection(db, 'games')
+      const q = query(gamesRef, orderBy('date', 'desc'), limit(20))
+      const querySnapshot = await getDocs(q)
+      const games = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Game))
+      setRecentGames(games)
+    }
+
+    fetchStats()
+    fetchRecentGames()
   }, [])
 
-  const addGame = async (game: Omit<Game, 'id'>) => {
-    try {
-      const docRef = await addDoc(collection(db, 'games'), game)
-      console.log('Game added with ID: ', docRef.id)
-    } catch (error) {
-      console.error('Error adding game: ', error)
-      throw error
+  const updateStats = async (currentStats: Stats, game: Game, isAdding: boolean) => {
+    game.players.forEach(player => {
+      if (!currentStats[player]) {
+        currentStats[player] = { totalGames: 0, totalWins: 0, totalSecondPlace: 0 }
+      }
+      currentStats[player].totalGames += isAdding ? 1 : -1
+      if (player === game.winner) currentStats[player].totalWins += isAdding ? 1 : -1
+      if (game.secondPlaces.includes(player)) currentStats[player].totalSecondPlace += isAdding ? 1 : -1
+    })
+    return currentStats
+  }
+
+  const addGame = async (winner: Player, secondPlaces: Player[], players: Player[]) => {
+    const docRef = doc(db, 'stats', 'aggregate')
+    const docSnap = await getDoc(docRef)
+    if (docSnap.exists()) {
+      let currentStats = docSnap.data().players as Stats
+      const newGame: Omit<Game, 'id'> = {
+        date: new Date().toISOString(),
+        players,
+        winner,
+        secondPlaces
+      }
+      currentStats = await updateStats(currentStats, newGame as Game, true)
+      await updateDoc(docRef, { players: currentStats })
+      setStats(currentStats)
+
+      // Add the game to the 'games' collection
+      const gameDocRef = await addDoc(collection(db, 'games'), newGame)
+      setRecentGames(prevGames => [{id: gameDocRef.id, ...newGame}, ...prevGames.slice(0, 19)])
     }
   }
 
-  const editGame = async (id: string, updatedGame: Partial<Omit<Game, 'id'>>) => {
-    try {
-      await updateDoc(doc(db, 'games', id), updatedGame)
-      console.log('Game updated with ID: ', id)
-      // Dispatch EDIT_GAME action
-      dispatch({ type: 'EDIT_GAME', payload: { id, ...updatedGame } as Game })
-    } catch (error) {
-      console.error('Error updating game: ', error)
-      throw error
+  const deleteGame = async (gameId: string) => {
+    const gameRef = doc(db, 'games', gameId)
+    const gameSnap = await getDoc(gameRef)
+    if (gameSnap.exists()) {
+      const game = { id: gameId, ...gameSnap.data() } as Game
+      const docRef = doc(db, 'stats', 'aggregate')
+      const docSnap = await getDoc(docRef)
+      if (docSnap.exists()) {
+        let currentStats = docSnap.data().players as Stats
+        currentStats = await updateStats(currentStats, game, false)
+        await updateDoc(docRef, { players: currentStats })
+        setStats(currentStats)
+      }
+      await deleteDoc(gameRef)
+      setRecentGames(prevGames => prevGames.filter(game => game.id !== gameId))
     }
   }
 
-  const removeGame = async (id: string) => {
-    try {
-      await deleteDoc(doc(db, 'games', id))
-      console.log('Game removed with ID: ', id)
-    } catch (error) {
-      console.error('Error removing game: ', error)
-      throw error
-    }
-  }
-
-  return { state, addGame, editGame, removeGame }
+  return { stats, recentGames, addGame, deleteGame }
 }
