@@ -12,7 +12,7 @@ export default function NewGame({ addGame }: NewGameProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitMessage, setSubmitMessage] = useState('')
 
-  const allPlayers: Player[] = ['Antoine', 'Don Jon', 'Chadi', 'Jeff', 'Roudy', 'Roy', 'Mike', 'Mario', 'Nick']
+  const allPlayers: Player[] = ['Antoine', 'Don Jon', 'Chadi', 'Jeff', 'Roudy', 'Roy', 'Mike', 'Mario', 'Nick', 'Phuong']
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

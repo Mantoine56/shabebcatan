@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BarChart3, User, PlusCircle, Menu, X } from 'lucide-react'
+import { BarChart3, User, PlusCircle, Menu, X, Zap } from 'lucide-react'
 import Dashboard from './Dashboard'
 import NewGame from './NewGame'
 import PlayerStats from './PlayerStats'
+import Streaks from './Streaks'
 import NavButton from './NavButton'
 import MobileNavButton from './MobileNavButton'
 import useGames from '@/hooks/useGames'
@@ -22,6 +23,8 @@ export default function CatanStatsTracker() {
         return <Dashboard stats={stats} recentGames={recentGames} deleteGame={deleteGame} />
       case 'playerStats':
         return <PlayerStats stats={stats} />
+      case 'streaks':
+        return <Streaks games={recentGames} />
       case 'newGame':
         return <NewGame addGame={addGame} />
       default:
@@ -35,8 +38,24 @@ export default function CatanStatsTracker() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <h1 className="text-3xl font-semibold">Catan Stats Tracker</h1>
           <nav className="hidden md:flex space-x-4">
-            <NavButton icon={<BarChart3 className="w-5 h-5" />} label="Dashboard" onClick={() => setActiveTab('dashboard')} active={activeTab === 'dashboard'} />
-            <NavButton icon={<User className="w-5 h-5" />} label="Player Stats" onClick={() => setActiveTab('playerStats')} active={activeTab === 'playerStats'} />
+            <NavButton 
+              icon={<BarChart3 className="w-5 h-5" />} 
+              label="Dashboard" 
+              onClick={() => setActiveTab('dashboard')} 
+              active={activeTab === 'dashboard'} 
+            />
+            <NavButton 
+              icon={<User className="w-5 h-5" />} 
+              label="Player Stats" 
+              onClick={() => setActiveTab('playerStats')} 
+              active={activeTab === 'playerStats'} 
+            />
+            <NavButton 
+              icon={<Zap className="w-5 h-5" />} 
+              label="Streaks" 
+              onClick={() => setActiveTab('streaks')} 
+              active={activeTab === 'streaks'} 
+            />
           </nav>
           <button
             onClick={() => setActiveTab('newGame')}
@@ -56,9 +75,26 @@ export default function CatanStatsTracker() {
         {mobileMenuOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              <MobileNavButton label="Dashboard" onClick={() => { setActiveTab('dashboard'); setMobileMenuOpen(false); }} active={activeTab === 'dashboard'} />
-              <MobileNavButton label="Player Stats" onClick={() => { setActiveTab('playerStats'); setMobileMenuOpen(false); }} active={activeTab === 'playerStats'} />
-              <MobileNavButton label="New Game" onClick={() => { setActiveTab('newGame'); setMobileMenuOpen(false); }} active={activeTab === 'newGame'} />
+              <MobileNavButton 
+                label="Dashboard" 
+                onClick={() => { setActiveTab('dashboard'); setMobileMenuOpen(false); }} 
+                active={activeTab === 'dashboard'} 
+              />
+              <MobileNavButton 
+                label="Player Stats" 
+                onClick={() => { setActiveTab('playerStats'); setMobileMenuOpen(false); }} 
+                active={activeTab === 'playerStats'} 
+              />
+              <MobileNavButton 
+                label="Streaks" 
+                onClick={() => { setActiveTab('streaks'); setMobileMenuOpen(false); }} 
+                active={activeTab === 'streaks'} 
+              />
+              <MobileNavButton 
+                label="New Game" 
+                onClick={() => { setActiveTab('newGame'); setMobileMenuOpen(false); }} 
+                active={activeTab === 'newGame'} 
+              />
             </div>
           </div>
         )}

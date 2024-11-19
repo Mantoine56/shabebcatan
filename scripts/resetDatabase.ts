@@ -41,6 +41,6 @@ async function resetDatabase() {
 
   await setDoc(doc(db, 'stats', 'aggregate'), { players: stats });
   console.log('Aggregate stats created');
-}
+}``
 
 resetDatabase().catch(console.error);

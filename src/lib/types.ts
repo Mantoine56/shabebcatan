@@ -1,4 +1,4 @@
-export type Player = 'Antoine' | 'Don Jon' | 'Chadi' | 'Jeff' | 'Roudy' | 'Roy' | 'Mike' | 'Mario' | 'Nick'
+export type Player = 'Antoine' | 'Don Jon' | 'Chadi' | 'Jeff' | 'Roudy' | 'Roy' | 'Mike' | 'Mario' | 'Nick' | 'Phuong'
 
 export interface Game {
   id: string
@@ -42,6 +42,7 @@ export function normalizePlayerName(name: string): Player {
     case 'mike': return 'Mike'
     case 'mario': return 'Mario'
     case 'nick': return 'Nick'
+    case 'phuong': return 'Phuong'
     default: throw new Error(`Invalid player name: ${name}`)
   }
 }
